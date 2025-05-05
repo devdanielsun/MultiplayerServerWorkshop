@@ -1,4 +1,1 @@
-
 # Global gitignore for root
-redis_data/
-*.zip
