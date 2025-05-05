@@ -13,9 +13,7 @@ The stack is built around a turn-based game, Tic Tac Toe, using frameworks I’m
 | Database             | MySQL              | 
 | Build and Run        | Docker containers for database and backend |
 
-## Setup
-
-### Client
+## Client - Unity 3D
 
 Load client project into Unity 3D
 
@@ -23,28 +21,33 @@ Load client project into Unity 3D
 ...
 ```
 
-## Server
-
-### Build and run - the easy way
+## Server - Build and run - the easy way
 
 1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 2. Execute the following command in CLI at the root folder of this repo: `docker compose up -d`
 
----
+Database runs on `127.0.0.1:3306`
 
-# Build and run - the hard way
+Backend runs on `127.0.0.1:8080`
+
+Open `127.0.0.1:8080/swagger` in your browser, to view the API structure
+
+## Server - Build and run - the hard way
 
 Through this way it will be easier to develop the backend.
 
-### MySQL Database
+#### MySQL Database
+
 ```
 cd database
 docker build -t mysql_database .
 docker run -d -p 127.0.0.1:3306:3306 mysql_database
 ```
 
-### C# .NET API
+Database runs on `127.0.0.1:3306`
+
+#### C# .NET API
 
 The backend project is dependent on the MySQL database, without the DB running the run will exit with an error.
 
