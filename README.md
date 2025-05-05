@@ -61,7 +61,7 @@ Through this way it will be easier to develop the backend.
 
 #### MySQL Database
 
-(TicTacToe.Database/README.md)[TicTacToe.Database/README.md]
+[TicTacToe.Database/README.md](TicTacToe.Database/README.md)
 
 #### C# .NET API
 
