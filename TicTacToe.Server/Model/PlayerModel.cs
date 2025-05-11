@@ -7,9 +7,9 @@ namespace TicTacToe.Server.Model;
 public class PlayerModel
 {
     [Column("player_id")]
-    public int Id { get; set; }
+    public required int Id { get; set; }
     [Column("username")]
-    public string Username { get; set; }
+    public required string Username { get; set; }
 
-    public ICollection<GamePlayerModel> GamePlayers { get; set; }
+    public required ICollection<GamePlayerModel> GamePlayers { get; set; }
 }

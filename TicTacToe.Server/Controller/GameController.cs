@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
@@ -27,32 +28,40 @@ public class GameController : ControllerBase
     [HttpGet("games/{id}")]
     [ProducesResponseType(typeof(GameModel), 200)]
     [ProducesResponseType(404)]
-    public IActionResult GetGame(int id)
+    public IActionResult GetGame(int id, int playerId)
     {
-        var game = _context.Games
-            .Where(g => g.Id == id)
-            .Select(g => new
-            {
-                g.Id,
-                g.GameName,
-                g.IsActive,
-                g.Board,
-                g.WinnerId,
-                Players = g.GamePlayers.Select(gp => new
-                {
-                    gp.PlayerOneId,
-                    gp.PlayerTwoId,
-                    gp.PlayerTurn
-                })
-            })
-            .FirstOrDefault();
-
-        if (game == null)
+        var gameModel = _context.Games.FirstOrDefault(g => g.Id == id);
+        if (gameModel == null)
         {
             return NotFound($"Game with ID {id} not found");
         }
 
-        return Ok(game);
+        var gamePlayer = _context.GamePlayers.FirstOrDefault(gp => gp.GameId == id);
+        if (gamePlayer == null)
+        {
+            return BadRequest("Game is invalid");
+        }
+
+        if (gamePlayer.PlayerTwoId != null)
+        {
+            return BadRequest("Game is already full");
+        }
+
+        // Automatically assign the player to the game
+        gamePlayer.PlayerTwoId = playerId;
+        _context.GamePlayers.Update(gamePlayer);
+        _context.SaveChanges();
+
+        return Ok(new
+        {
+            gameModel.Id,
+            gameModel.GameName,
+            gameModel.IsActive,
+            gameModel.Board,
+            gameModel.WinnerId,
+            gamePlayer.PlayerOneId,
+            gamePlayer.PlayerTwoId
+        });
     }
 
     [HttpPost("games/create")]

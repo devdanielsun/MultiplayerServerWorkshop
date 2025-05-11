@@ -9,10 +9,10 @@ public class GamePlayerModel
     public int Id { get; set; }
 
     [Column("game_id")]
-    public int GameId { get; set; }
+    public required int GameId { get; set; }
 
     [Column("player_one_id")]
-    public int PlayerOneId { get; set; }
+    public required int PlayerOneId { get; set; }
 
     [Column("player_two_id")]
     public int? PlayerTwoId { get; set; }
@@ -20,8 +20,8 @@ public class GamePlayerModel
     [Column("player_turn")]
     public int? PlayerTurn { get; set; }
 
-    public GameModel Game { get; set; }
-    public PlayerModel PlayerOne { get; set; }
-    public PlayerModel PlayerTwo { get; set; }
+    public GameModel? Game { get; set; }
+    public PlayerModel? PlayerOne { get; set; }
+    public PlayerModel? PlayerTwo { get; set; }
     public PlayerModel? CurrentTurnPlayer { get; set; }
 }
