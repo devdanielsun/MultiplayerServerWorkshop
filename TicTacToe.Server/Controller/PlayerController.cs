@@ -6,6 +6,8 @@ using TicTacToe.Server.Model;
 
 namespace TicTacToe.Server.Controller;
 
+[ApiController]
+[Route("api/[controller]")]
 public class PlayerController : ControllerBase
 {
     private readonly DatabaseContext _context;
