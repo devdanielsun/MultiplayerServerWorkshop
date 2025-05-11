@@ -67,6 +67,4 @@ Through this way it will be easier to develop the backend.
 
 The backend project is dependent on the MySQL database, without the DB running the run will exit with an error.
 
-1. Open [/TicTacToe.Server/](TicTacToe.Server) into Visual Studio 2022
-2. Press play to start the Api
-3. Use `https://127.0.0.1:5001/swagger` or some application like Postman to test the api
+[TicTacToe.Server/README.md](TicTacToe.Server/README.md)
