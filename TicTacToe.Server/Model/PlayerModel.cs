@@ -10,6 +10,4 @@ public class PlayerModel
     public int Id { get; set; }
     [Column("username")]
     public required string Username { get; set; }
-
-    public ICollection<GamePlayerModel>? GamePlayers { get; set; }
 }

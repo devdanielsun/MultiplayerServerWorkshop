@@ -15,28 +15,28 @@ public class DatabaseContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Configure relationships for game_players
-        modelBuilder.Entity<GamePlayerModel>()
-            .HasOne(gp => gp.Game)
-            .WithMany(g => g.GamePlayers)
-            .HasForeignKey(gp => gp.GameId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // modelBuilder.Entity<GamePlayerModel>()
+        //     .HasOne(gp => gp.Game)
+        //     .WithMany(g => g.GamePlayers)
+        //     .HasForeignKey(gp => gp.GameId)
+        //     .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<GamePlayerModel>()
-            .HasOne(gp => gp.PlayerOne)
-            .WithMany(p => p.GamePlayers)
-            .HasForeignKey(gp => gp.PlayerOneId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // modelBuilder.Entity<GamePlayerModel>()
+        //     .HasOne(gp => gp.PlayerOne)
+        //     .WithMany(p => p.GamePlayers)
+        //     .HasForeignKey(gp => gp.PlayerOneId)
+        //     .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<GamePlayerModel>()
-            .HasOne(gp => gp.PlayerTwo)
-            .WithMany()
-            .HasForeignKey(gp => gp.PlayerTwoId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // modelBuilder.Entity<GamePlayerModel>()
+        //     .HasOne(gp => gp.PlayerTwo)
+        //     .WithMany()
+        //     .HasForeignKey(gp => gp.PlayerTwoId)
+        //     .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<GamePlayerModel>()
-            .HasOne(gp => gp.CurrentTurnPlayer)
-            .WithMany()
-            .HasForeignKey(gp => gp.PlayerTurn)
-            .OnDelete(DeleteBehavior.Cascade);
+        // modelBuilder.Entity<GamePlayerModel>()
+        //     .HasOne(gp => gp.CurrentTurnPlayer)
+        //     .WithMany()
+        //     .HasForeignKey(gp => gp.PlayerTurn)
+        //     .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -17,7 +17,6 @@ public class GameModel
     [Column("winner_id")]
     public int? WinnerId { get; set; }
 
-    public PlayerModel? Winner { get; set; }
-
-    public ICollection<GamePlayerModel>? GamePlayers { get; set; }
+    // Navigation property for the related game players
+    public ICollection<GamePlayerModel> GamePlayers { get; set; } = new List<GamePlayerModel>();
 }

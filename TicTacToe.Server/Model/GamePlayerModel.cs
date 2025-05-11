@@ -20,8 +20,10 @@ public class GamePlayerModel
     [Column("player_turn")]
     public int? PlayerTurn { get; set; }
 
-    public GameModel? Game { get; set; }
-    public PlayerModel? PlayerOne { get; set; }
-    public PlayerModel? PlayerTwo { get; set; }
-    public PlayerModel? CurrentTurnPlayer { get; set; }
+    // Navigation properties for players
+    public PlayerModel PlayerOne { get; set; } = null!;
+    public PlayerModel PlayerTwo { get; set; } = null!;
+
+    // Navigation property for the related game
+    public GameModel Game { get; set; } = null!;
 }

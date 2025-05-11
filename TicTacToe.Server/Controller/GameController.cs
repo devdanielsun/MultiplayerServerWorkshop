@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TicTacToe.Server.Model;
 
 namespace TicTacToe.Server.Controller;
@@ -21,47 +21,58 @@ public class GameController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<GameModel>), 200)]
     public IActionResult GetGames()
     {
-        var games = _context.Games.ToList();
+        var games = _context.Games
+            .Include(g => g.GamePlayers)
+            .ThenInclude(gp => gp.PlayerOne)
+            .Include(g => g.GamePlayers)
+            .ThenInclude(gp => gp.PlayerTwo)
+            .Select(g => new
+            {
+                g.Id,
+                g.GameName,
+                g.IsActive,
+                g.Board,
+                Players = g.GamePlayers.Select(gp => new
+                {
+                    PlayerOne = gp.PlayerOne.Username,
+                    PlayerTwo = gp.PlayerTwo.Username
+                })
+            })
+            .ToList();
         return Ok(games);
     }
 
     [HttpGet("games/{id}")]
     [ProducesResponseType(typeof(GameModel), 200)]
     [ProducesResponseType(404)]
-    public IActionResult GetGame(int id, int playerId)
+    public IActionResult GetGame(int id)
     {
-        var gameModel = _context.Games.FirstOrDefault(g => g.Id == id);
-        if (gameModel == null)
+        var game = _context.Games
+            .Include(g => g.GamePlayers)
+            .ThenInclude(gp => gp.PlayerOne)
+            .Include(g => g.GamePlayers)
+            .ThenInclude(gp => gp.PlayerTwo)
+            .Where(g => g.Id == id)
+            .Select(g => new
+            {
+                g.Id,
+                g.GameName,
+                g.IsActive,
+                g.Board,
+                Players = g.GamePlayers.Select(gp => new
+                {
+                    PlayerOne = gp.PlayerOne.Username,
+                    PlayerTwo = gp.PlayerTwo.Username
+                })
+            })
+            .FirstOrDefault();
+
+        if (game == null)
         {
             return NotFound($"Game with ID {id} not found");
         }
 
-        var gamePlayer = _context.GamePlayers.FirstOrDefault(gp => gp.GameId == id);
-        if (gamePlayer == null)
-        {
-            return BadRequest("Game is invalid");
-        }
-
-        if (gamePlayer.PlayerTwoId != null)
-        {
-            return BadRequest("Game is already full");
-        }
-
-        // Automatically assign the player to the game
-        gamePlayer.PlayerTwoId = playerId;
-        _context.GamePlayers.Update(gamePlayer);
-        _context.SaveChanges();
-
-        return Ok(new
-        {
-            gameModel.Id,
-            gameModel.GameName,
-            gameModel.IsActive,
-            gameModel.Board,
-            gameModel.WinnerId,
-            gamePlayer.PlayerOneId,
-            gamePlayer.PlayerTwoId
-        });
+        return Ok(game);
     }
 
     [HttpPost("games/create")]
@@ -81,7 +92,7 @@ public class GameController : ControllerBase
             Board = new string(' ', 9) // Initialize the board with empty spaces
         };
 
-        _context.Games.Add(gameModel);
+        GameModel newGame = _context.Games.Add(gameModel).Entity;
         _context.SaveChanges();
 
         var gamePlayerModel = new GamePlayerModel
@@ -94,7 +105,7 @@ public class GameController : ControllerBase
         _context.GamePlayers.Add(gamePlayerModel);
         _context.SaveChanges();
 
-        return CreatedAtAction(nameof(GetGame), new { id = gameModel.Id }, gameModel);
+        return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
     }
 
     [HttpPost("games/{id}/join")]
