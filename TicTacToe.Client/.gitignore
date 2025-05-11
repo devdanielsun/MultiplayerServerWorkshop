@@ -1,0 +1,47 @@
+# This .gitignore file is for Unity projects.
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# User-specific files
+*.swp
+*.swo
+*.tmp
+*.userprefs
+*.pidb
+*.sln
+*.csproj
+
+# Unity generated files
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+
+# Asset meta files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Crash reports
+sysinfo.txt
+
+# Build results
+*.apk
+*.aab
+*.unitypackage
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+*.sln.iml
+
+# JetBrains Rider
+.idea/
+*.sln.iml
