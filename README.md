@@ -30,35 +30,11 @@ Load client project into Unity 3D
 
 2. Open folder [/TicTacToe.Client/](TicTacToe.Client)  
 
-3. Maak een scene. Voeg een leeg GameObject toe
+3. Open MainMenu.scene
 
-4. Maak een UI met 9 knoppen (3x3), elk roept BoardManager.OnCellClicked(index) aan
+4. Search for `http` in the code to add the missing code.
 
-5.  ...
-
-6.  Search for `Todo` in the code to add the missing code.
-
-## Server - Build and run - the easy way
-
-1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-
-2. Execute the following command in CLI at the root folder of this repo: `docker compose up -d --build`
-
-Database runs on `127.0.0.1:3306`
-
-Backend runs on `https://127.0.0.1:5001`
-
-Open `https://127.0.0.1:5001/swagger` in your browser, to view the API structure
-
-Opschonen:
-
-```
-docker-compose down -v
-```
-
-## Server - Build and run - the hard way
-
-Through this way it will be easier to develop the backend.
+## Server > backend and database
 
 #### MySQL Database
 
@@ -66,6 +42,6 @@ Through this way it will be easier to develop the backend.
 
 #### C# .NET API
 
-The backend project is dependent on the MySQL database, without the DB running the run will exit with an error.
+The backend project is dependent on the MySQL database, without the database running the C#.NET API will exit with an error.
 
 [TicTacToe.Server/README.md](TicTacToe.Server/README.md)
