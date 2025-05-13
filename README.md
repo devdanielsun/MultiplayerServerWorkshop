@@ -7,7 +7,8 @@ This repository contains a Server and Client for hosting and playing a simple Ti
 - Server: [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)
 - Server: [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
 - Docker, for database container: [Docker](https://www.docker.com/)
-- Client: [Unity 2022+](https://unity.com/)
+- Client: [Unity Hub](https://unity.com/)
+- Client: Unity 6000.1.2f1 (or newer)
 - Git (optioneel voor versiebeheer)
 
 ## Tech stack:
