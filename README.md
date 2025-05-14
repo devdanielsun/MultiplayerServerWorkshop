@@ -20,20 +20,20 @@ The stack is built around a turn-based game, Tic Tac Toe, using frameworks I'm f
 
 | (Software) Component | Framework/Language |
 | -------------------- | ------------------ |
-| Client               | Unity 3D           | 
+| Client               | Unity Hub          | 
 | Backend              | C# .NET RESTful API |
 | Database             | MySQL              | 
 | Build and Run        | Docker containers for database and backend |
 
-## Client - Unity 3D
+## Client - Unity
 
-Load client project into Unity 3D
+Load client project into Unity.
 
 1. Start Unity Hub
 
-2. Open folder [/TicTacToe.Client/](TicTacToe.Client)  
+2. Open folder [TicTacToe.Client/](TicTacToe.Client)  
 
-3. Open MainMenu.scene
+3. Open StartMenu.scene
 
 4. Search for `http` in the code to add the missing code.
 
