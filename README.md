@@ -1,6 +1,6 @@
 # Multiplayer Server Workshop
 
-This repository contains a Server and Client for hosting and playing a simple Tic Tac Toe game. It serves as a basic demonstration of how a multiplayer game server _can_ be set up. The project was created for a workshop aimed at students in Game and Software Development programs.
+This repository contains a Server and Client for hosting and playing a simple TicTacToe game. It serves as a proof of concept to demonstrate how a basic multiplayer game server _can_ be set up. Note that it lacks best practices, security, and optimizations. The project was created for a workshop targeting students in Game and Software Development programs.
 
 ## 🔧 Requirements
 
