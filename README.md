@@ -11,7 +11,7 @@ This repository contains a Server and Client for hosting and playing a simple Ti
     - Docker, for database container: [Docker](https://www.docker.com/)
 - Client
     - [Unity Hub](https://unity.com/)
-    - Unity 6000.0.49f1
+    - Developed in Unity version 6000.1.2f1
     - [Unity for Visual Studio Code](https://marketplace.visualstudio.com/items/?itemName=VisualStudioToolsForUnity.vstuc) extension
 - Git (optional for versioncontrol)
 
