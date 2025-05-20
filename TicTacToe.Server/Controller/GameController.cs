@@ -7,7 +7,7 @@ using TicTacToe.Server.Model;
 namespace TicTacToe.Server.Controller;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/games/")]
 public class GameController : ControllerBase
 {
     private readonly DatabaseContext _context;
@@ -17,7 +17,7 @@ public class GameController : ControllerBase
         _context = context;
     }
 
-    [HttpGet("games")]
+    [HttpGet()]
     [ProducesResponseType(typeof(IEnumerable<GameModel>), 200)]
     public IActionResult GetGames()
     {
@@ -42,7 +42,7 @@ public class GameController : ControllerBase
         return Ok(games);
     }
 
-    [HttpGet("games/{id}")]
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(GameModel), 200)]
     [ProducesResponseType(404)]
     public IActionResult GetGame(int id)
@@ -75,7 +75,7 @@ public class GameController : ControllerBase
         return Ok(game);
     }
 
-    [HttpPost("games/create")]
+    [HttpPost("create")]
     [ProducesResponseType(typeof(GameModel), 201)]
     [ProducesResponseType(400)]
     public IActionResult CreateGame(int playerId)
@@ -108,7 +108,7 @@ public class GameController : ControllerBase
         return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
     }
 
-    [HttpPost("games/{id}/join")]
+    [HttpPost("{id}/join")]
     [ProducesResponseType(typeof(GameModel), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]

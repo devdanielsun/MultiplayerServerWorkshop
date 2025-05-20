@@ -7,7 +7,7 @@ using TicTacToe.Server.Model;
 namespace TicTacToe.Server.Controller;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/players/")]
 public class PlayerController : ControllerBase
 {
     private readonly DatabaseContext _context;
@@ -17,7 +17,7 @@ public class PlayerController : ControllerBase
         _context = context;
     }
 
-    [HttpGet("players")]
+    [HttpGet("")]
     [ProducesResponseType(typeof(IEnumerable<PlayerModel>), 200)]
     public IActionResult GetPlayers()
     {
@@ -25,7 +25,7 @@ public class PlayerController : ControllerBase
         return Ok(players);
     }
 
-    [HttpGet("players/{id}")]
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(PlayerModel), 200)]
     [ProducesResponseType(404)]
     public IActionResult GetPlayer(int id)
@@ -39,7 +39,7 @@ public class PlayerController : ControllerBase
         return Ok(player);
     }
 
-    [HttpGet("players/{id}/name")]
+    [HttpGet("{id}/name")]
     [ProducesResponseType(typeof(string), 200)]
     [ProducesResponseType(404)]
     public IActionResult GetPlayerName(int id)
@@ -53,7 +53,7 @@ public class PlayerController : ControllerBase
         return Ok(player.Username);
     }
 
-    [HttpPost("players/create")]
+    [HttpPost("create")]
     [ProducesResponseType(typeof(PlayerModel), 201)]
     [ProducesResponseType(400)]
     public IActionResult CreatePlayer([FromBody] string name)
