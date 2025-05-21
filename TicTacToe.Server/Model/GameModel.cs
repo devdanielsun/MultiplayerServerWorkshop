@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TicTacToe.Server.Model;
@@ -16,7 +15,4 @@ public class GameModel
     public required string Board { get; set; } = new string(' ', 9); // Default to empty board
     [Column("winner_id")]
     public int? WinnerId { get; set; }
-
-    // Navigation property for the related game players
-    public ICollection<GamePlayerModel> GamePlayers { get; set; } = new List<GamePlayerModel>();
 }

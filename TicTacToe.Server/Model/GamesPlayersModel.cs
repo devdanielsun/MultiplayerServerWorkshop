@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TicTacToe.Server.Model;
 
-[Table("game_players")]
-public class GamePlayerModel
+[Table("games_players")]
+public class GamesPlayersModel
 {
     [Column("game_player_id")]
     public int Id { get; set; }
@@ -20,10 +20,8 @@ public class GamePlayerModel
     [Column("player_turn")]
     public int? PlayerTurn { get; set; }
 
-    // Navigation properties for players
     public PlayerModel PlayerOne { get; set; } = null!;
-    public PlayerModel PlayerTwo { get; set; } = null!;
+    public PlayerModel? PlayerTwo { get; set; } = null!;
 
-    // Navigation property for the related game
     public GameModel Game { get; set; } = null!;
 }

@@ -1,8 +1,7 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TicTacToe.Server.Model;
+using TicTacToe.Server.Model.DTOs;
 
 namespace TicTacToe.Server.Controller;
 
@@ -18,15 +17,28 @@ public class PlayerController : ControllerBase
     }
 
     [HttpGet("")]
-    [ProducesResponseType(typeof(IEnumerable<PlayerModel>), 200)]
+    [ProducesResponseType(typeof(ListOfPlayers), 200)]
     public IActionResult GetPlayers()
     {
         var players = _context.Players.ToList();
-        return Ok(players);
+
+        ListOfPlayers playersDTOs = new ListOfPlayers();
+
+        foreach (var player in players)
+        {
+            PlayerDTO playerDTO = new PlayerDTO()
+            {
+                id = player.Id,
+                username = player.Username,
+            };
+            playersDTOs.players.Add(playerDTO);
+        }
+
+        return Ok(playersDTOs);
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(PlayerModel), 200)]
+    [ProducesResponseType(typeof(PlayerDTO), 200)]
     [ProducesResponseType(404)]
     public IActionResult GetPlayer(int id)
     {
@@ -36,7 +48,13 @@ public class PlayerController : ControllerBase
             return NotFound($"Player with ID {id} not found");
         }
 
-        return Ok(player);
+        PlayerDTO playerDTO = new PlayerDTO()
+        {
+            id = player.Id,
+            username = player.Username,
+        };
+
+        return Ok(playerDTO);
     }
 
     [HttpGet("{id}/name")]
@@ -54,29 +72,35 @@ public class PlayerController : ControllerBase
     }
 
     [HttpPost("create")]
-    [ProducesResponseType(typeof(PlayerModel), 201)]
+    [ProducesResponseType(typeof(PlayerDTO), 201)]
     [ProducesResponseType(400)]
-    public IActionResult CreatePlayer([FromBody] string name)
+    public IActionResult CreatePlayer([FromQuery] string username)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(username))
         {
             return BadRequest("Username is required");
         }
 
-        var existingPlayer = _context.Players.FirstOrDefault(p => p.Username == name);
+        var existingPlayer = _context.Players.Where(p => p.Username == username).FirstOrDefault();
         if (existingPlayer != null)
         {
-            return BadRequest($"Player with username {name} already exists");
+            return Created($"api/players/{existingPlayer.Id}", existingPlayer);
         }
 
         var player = new PlayerModel
         {
-            Username = name,
+            Username = username,
         };
 
         _context.Players.Add(player);
         _context.SaveChanges();
 
-        return CreatedAtAction(nameof(GetPlayer), new { id = player.Id }, player);
+        PlayerDTO playerDTO = new PlayerDTO()
+        {
+            id = player.Id,
+            username = player.Username,
+        };
+
+        return CreatedAtAction(nameof(GetPlayer), new { id = playerDTO.id }, playerDTO);
     }
 }

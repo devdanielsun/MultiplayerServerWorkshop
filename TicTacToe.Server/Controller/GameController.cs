@@ -1,8 +1,9 @@
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TicTacToe.Server.Logic;
 using TicTacToe.Server.Model;
+using TicTacToe.Server.Model.DTOs;
 
 namespace TicTacToe.Server.Controller;
 
@@ -18,53 +19,31 @@ public class GameController : ControllerBase
     }
 
     [HttpGet()]
-    [ProducesResponseType(typeof(IEnumerable<GameModel>), 200)]
+    [ProducesResponseType(typeof(ListOfGames), 200)]
     public IActionResult GetGames()
     {
-        var games = _context.Games
-            .Include(g => g.GamePlayers)
-            .ThenInclude(gp => gp.PlayerOne)
-            .Include(g => g.GamePlayers)
-            .ThenInclude(gp => gp.PlayerTwo)
-            .Select(g => new
-            {
-                g.Id,
-                g.GameName,
-                g.IsActive,
-                g.Board,
-                Players = g.GamePlayers.Select(gp => new
-                {
-                    PlayerOne = gp.PlayerOne.Username,
-                    PlayerTwo = gp.PlayerTwo.Username
-                })
-            })
+
+        var games = _context.GamesPlayers
+            .Include(gp => gp.Game)
+            .Include(gp => gp.PlayerOne)
+            .Include(gp => gp.PlayerTwo)
+            .Select(g => g)
             .ToList();
-        return Ok(games);
+
+        return Ok(Mapper.MapGame(games));
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(GameModel), 200)]
+    [ProducesResponseType(typeof(GameDTO), 200)]
     [ProducesResponseType(404)]
     public IActionResult GetGame(int id)
     {
-        var game = _context.Games
-            .Include(g => g.GamePlayers)
-            .ThenInclude(gp => gp.PlayerOne)
-            .Include(g => g.GamePlayers)
-            .ThenInclude(gp => gp.PlayerTwo)
-            .Where(g => g.Id == id)
-            .Select(g => new
-            {
-                g.Id,
-                g.GameName,
-                g.IsActive,
-                g.Board,
-                Players = g.GamePlayers.Select(gp => new
-                {
-                    PlayerOne = gp.PlayerOne.Username,
-                    PlayerTwo = gp.PlayerTwo.Username
-                })
-            })
+        var game = _context.GamesPlayers
+            .Include(gp => gp.Game)
+            .Include(gp => gp.PlayerOne)
+            .Include(gp => gp.PlayerTwo)
+            .Where(g => g.Game.Id == id)
+            .Select(g => g)
             .FirstOrDefault();
 
         if (game == null)
@@ -72,11 +51,11 @@ public class GameController : ControllerBase
             return NotFound($"Game with ID {id} not found");
         }
 
-        return Ok(game);
+        return Ok(Mapper.MapGame(game));
     }
 
     [HttpPost("create")]
-    [ProducesResponseType(typeof(GameModel), 201)]
+    [ProducesResponseType(typeof(GameDTO), 201)]
     [ProducesResponseType(400)]
     public IActionResult CreateGame(int playerId)
     {
@@ -85,50 +64,87 @@ public class GameController : ControllerBase
             return BadRequest("PlayerId is null");
         }
 
+        // 1. Create and save the GameModel first to get its Id
         var gameModel = new GameModel
         {
             GameName = "New Game",
             IsActive = true,
-            Board = new string(' ', 9) // Initialize the board with empty spaces
+            Board = new string('_', 9) // Initialize the board with underscores
         };
 
-        GameModel newGame = _context.Games.Add(gameModel).Entity;
+        _context.Games.Add(gameModel);
         _context.SaveChanges();
 
-        var gamePlayerModel = new GamePlayerModel
+        // 2. Create the GamesPlayersModel with the generated GameId
+        var gamePlayerModel = new GamesPlayersModel
         {
             GameId = gameModel.Id,
             PlayerOneId = playerId,
             PlayerTurn = playerId // Player who created the game starts
         };
 
-        _context.GamePlayers.Add(gamePlayerModel);
+        _context.GamesPlayers.Add(gamePlayerModel);
         _context.SaveChanges();
 
-        return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
+        // 3. Optionally update the GameName now that Id is known
+        gameModel.GameName = $"Game {gameModel.Id}";
+        _context.SaveChanges();
+
+        GameDTO gameDTO = new GameDTO()
+        {
+            id = gameModel.Id,
+            gameName = gameModel.GameName,
+            isActive = gameModel.IsActive,
+            board = gameModel.Board,
+            playerOneId = gamePlayerModel.PlayerOneId,
+            playerOneName = _context.Players.FirstOrDefault(p => p.Id == gamePlayerModel.PlayerOneId)?.Username ?? "Unknown",
+            playerTwoId = -1, // PlayerTwoId will be set when the second player joins
+            playerTwoName = "", // PlayerTwoName will be set when the second player joins
+            winnerId = -1 // No winner at the start
+        };
+
+        return CreatedAtAction(nameof(GetGame), new { id = gameDTO.id }, gameDTO);
     }
 
     [HttpPost("{id}/join")]
-    [ProducesResponseType(typeof(GameModel), 200)]
+    [ProducesResponseType(typeof(GameDTO), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
     public IActionResult JoinGame(int id, int playerId)
     {
-        var gameModel = _context.Games.FirstOrDefault(g => g.Id == id);
-        if (gameModel == null)
+        var playerTwo = _context.Players
+            .Where(p => p.Id == playerId)
+            .First();
+        if (playerId == null || playerTwo == null)
+        {
+            return BadRequest("PlayerId is null or invalid");
+        }
+
+        var gamesPlayers = _context.GamesPlayers
+            .Include(g => g.Game)
+            .Include(gp => gp.PlayerOne)
+            .Include(gp => gp.PlayerTwo)
+            .Where(g => g.Game.Id == id)
+            .First();
+
+        if (gamesPlayers == null || gamesPlayers.Game == null)
         {
             return NotFound($"Game with ID {id} not found");
         }
 
-        var gamePlayer = _context.GamePlayers.FirstOrDefault(gp => gp.GameId == id);
-        if (gamePlayer == null || gamePlayer.PlayerTwoId != null)
+        if (gamesPlayers.PlayerTwoId != null)
         {
             return BadRequest("Game is already full or invalid");
         }
 
-        gamePlayer.PlayerTwoId = playerId;
+        if (gamesPlayers.PlayerOneId == playerId)
+        {
+            return BadRequest("Player cannot join their own game");
+        }
+
+        gamesPlayers.PlayerTwoId = playerId;
         _context.SaveChanges();
 
-        return Ok(gameModel);
+        return Ok(Mapper.MapGame(gamesPlayers));
     }
 }
