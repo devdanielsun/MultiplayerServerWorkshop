@@ -17,8 +17,8 @@ CREATE TABLE games (
     FOREIGN KEY (winner_id) REFERENCES players(player_id) ON DELETE CASCADE
 );
 
--- Create the game_players table to track player pairs in a game
-CREATE TABLE game_players (
+-- Create the games_players table to track player pairs in a game
+CREATE TABLE games_players (
     game_player_id INT AUTO_INCREMENT PRIMARY KEY,
     game_id INT NOT NULL,
     player_one_id INT NOT NULL,
