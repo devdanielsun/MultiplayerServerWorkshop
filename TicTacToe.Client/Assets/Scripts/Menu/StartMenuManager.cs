@@ -1,4 +1,7 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro; // Import TextMeshPro namespace
@@ -10,29 +13,35 @@ public class StartMenuManager : MonoBehaviour
     public Button nextButton;
     public Button clearButton;
 
+    private bool apiOnline = false;
+
     void Start()
     {
         LoadUserSettings();
-
-        nextButton.onClick.AddListener(OnNextButtonClicked);
-        clearButton.onClick.AddListener(OnClearButtonClicked);
     }
 
-    private void OnNextButtonClicked()
+    public void OnNextButtonClicked()
     {
-        var savedUserSettings = SaveUserSettings();
-
-        if (!savedUserSettings)
+        if (string.IsNullOrEmpty(ipInputField.text) || string.IsNullOrEmpty(usernameInputField.text))
         {
-            Debug.LogWarning("Failed to save user settings.");
+            Debug.LogWarning("IP Address or Username cannot be empty.");
+            return;
+        }
+        if (usernameInputField.text.Length < 3 || usernameInputField.text.Length > 20)
+        {
+            Debug.LogWarning("Username must be at least 3 characters long and no more than 20 characters.");
+            return;
+        }
+        if (!ipInputField.text.StartsWith("http://") && !ipInputField.text.StartsWith("https://"))
+        {
+            Debug.LogWarning("IP Address must start with http:// or https://");
             return;
         }
 
-        // Load the next scene or perform the next action
-        SceneManager.LoadScene("GameMenu");
+        StartCoroutine(RegisterNewPlayer(ipInputField.text, usernameInputField.text));
     }
 
-    private void OnClearButtonClicked()
+    public void OnClearButtonClicked()
     {
         ipInputField.text = string.Empty;
         usernameInputField.text = string.Empty;
@@ -43,28 +52,56 @@ public class StartMenuManager : MonoBehaviour
         Debug.Log("User settings cleared.");
     }
 
-    /*
-        * This method is called when the user clicks the "Next" button.
-        * It saves the user settings and returns if that was succesfull.
-        */
-    private bool SaveUserSettings()
+    private IEnumerator RegisterNewPlayer(string url, string playerName)
     {
-        if (string.IsNullOrEmpty(ipInputField.text) || string.IsNullOrEmpty(usernameInputField.text))
-        {
-            Debug.LogWarning("IP Address or Username cannot be empty.");
-            return false;
-        }
-        if (usernameInputField.text.Length < 3 || usernameInputField.text.Length > 20)
-        {
-            Debug.LogWarning("Username must be at least 3 characters long and no more than 20 characters.");
-            return false;
-        }
+        Debug.Log($"Try registering new player with URL: {ipInputField.text} and Username: {usernameInputField.text}");
 
-        PlayerPrefs.SetString(Config.apiUrlKey, ipInputField.text);
-        PlayerPrefs.SetString(Config.usernameKey, usernameInputField.text);
-        PlayerPrefs.Save();
+        // string jsonPayload = JsonUtility.ToJson(new PlayerDTO { id = 0, username = playerName });
+        
+        using (UnityWebRequest request = new UnityWebRequest(url + $"/api/players/create?username={playerName}", "POST"))
+        {
+            request.downloadHandler = new DownloadHandlerBuffer();
 
-        return true;
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"Error creating player: {request.error}");
+                apiOnline = false;
+            }
+            else
+            {
+                apiOnline = true;
+
+                string responseText = request.downloadHandler.text;
+
+                if (string.IsNullOrEmpty(responseText))
+                {
+                    Debug.LogError("Response is empty. Failed to create player.");
+                    yield break;
+                }
+
+                try
+                {
+                    var newPLayer = JsonUtility.FromJson<PlayerDTO>(responseText);
+
+                    PlayerPrefs.SetString(Config.apiUrlKey, url);
+                    PlayerPrefs.SetString(Config.usernameKey, playerName);
+                    PlayerPrefs.SetString(Config.playerId, newPLayer.id.ToString());
+                    PlayerPrefs.Save();
+
+                    Debug.Log("Create new player success, or 'loggedin' successfull.");
+
+                    
+                    // Load the next scene or perform the next action
+                    SceneManager.LoadScene("GameMenu");
+                                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"Failed to parse response: {ex.Message}");
+                }
+            }
+        }
     }
 
     private void LoadUserSettings()
