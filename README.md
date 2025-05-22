@@ -5,14 +5,14 @@ This repository contains a Server and Client for hosting and playing a simple Ti
 ## 🔧 Requirements
 
 - Server:
-    - [VSCode](https://code.visualstudio.com/) or [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
+    - [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
     - [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)
 - Database:
     - Docker, for database container: [Docker](https://www.docker.com/)
 - Client
     - [Unity Hub](https://unity.com/)
     - Developed in Unity version 6000.1.2f1
-    - [Unity for Visual Studio Code](https://marketplace.visualstudio.com/items/?itemName=VisualStudioToolsForUnity.vstuc) extension
+    - [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
 - Git (optional for versioncontrol)
 
 ## Tech stack:
