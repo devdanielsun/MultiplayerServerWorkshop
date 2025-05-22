@@ -100,17 +100,18 @@ public class GameController : ControllerBase
             playerOneName = _context.Players.FirstOrDefault(p => p.Id == gamePlayerModel.PlayerOneId)?.Username ?? "Unknown",
             playerTwoId = -1, // PlayerTwoId will be set when the second player joins
             playerTwoName = "", // PlayerTwoName will be set when the second player joins
-            winnerId = -1 // No winner at the start
+            winnerId = -1, // No winner at the start
+            playerTurn = gamePlayerModel.PlayerTurn
         };
 
         return CreatedAtAction(nameof(GetGame), new { id = gameDTO.id }, gameDTO);
     }
 
-    [HttpPost("{id}/join")]
+    [HttpPost("{gameId}/join")]
     [ProducesResponseType(typeof(GameDTO), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
-    public IActionResult JoinGame(int id, int playerId)
+    public IActionResult JoinGame(int gameId, int playerId)
     {
         var playerTwo = _context.Players
             .Where(p => p.Id == playerId)
@@ -124,12 +125,12 @@ public class GameController : ControllerBase
             .Include(g => g.Game)
             .Include(gp => gp.PlayerOne)
             .Include(gp => gp.PlayerTwo)
-            .Where(g => g.Game.Id == id)
+            .Where(g => g.Game.Id == gameId)
             .First();
 
         if (gamesPlayers == null || gamesPlayers.Game == null)
         {
-            return NotFound($"Game with ID {id} not found");
+            return NotFound($"Game with ID {gameId} not found");
         }
 
         if (gamesPlayers.PlayerTwoId != null)
@@ -146,5 +147,94 @@ public class GameController : ControllerBase
         _context.SaveChanges();
 
         return Ok(Mapper.MapGame(gamesPlayers));
+    }
+
+    [HttpPost("{gameId}/move")]
+    [ProducesResponseType(typeof(GameDTO), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public IActionResult MakeMove(int gameId, [FromBody] MoveRequestDTO move)
+    {
+        var game = _context.GamesPlayers
+            .Include(g => g.Game)
+            .Include(gp => gp.PlayerOne)
+            .Include(gp => gp.PlayerTwo)
+            .Where(g => g.Game.Id == gameId && (g.PlayerOneId == move.playerId || g.PlayerTwoId == move.playerId))
+            .FirstOrDefault();
+
+        if (game == null || game.Game == null)
+        {
+            return NotFound($"Game with ID {gameId} not found or player is not part of the game");
+        }
+
+        if (game.Game.WinnerId != null)
+        {
+            return BadRequest("Game already has a winner.");
+        }
+
+        if (move.index < 0 || move.index >= 9)
+        {
+            return BadRequest("Invalid move index.");
+        }
+
+        if (game.Game.Board[move.index] != '_')
+        {
+            return BadRequest("Invalid move. Tile already occupied.");
+        }
+
+        if (game.PlayerTurn != move.playerId)
+        {
+            return BadRequest("It's not your turn.");
+        }
+
+        // Mark the move: '1' for PlayerOne, '2' for PlayerTwo
+        char mark = (game.PlayerOneId == move.playerId) ? '1' : '2';
+        game.Game.Board = game.Game.Board.Remove(move.index, 1).Insert(move.index, mark.ToString());
+
+        // Check for winner
+        int? winnerId = TicTacToeLogic.CheckWinner(game.Game.Board, game.PlayerOneId, game.PlayerTwoId);
+        if (winnerId != null)
+        {
+            game.Game.WinnerId = winnerId;
+            game.Game.IsActive = false;
+        }
+        else
+        {
+            // Switch turn
+            if (game.PlayerOneId == move.playerId && game.PlayerTwoId != null)
+                game.PlayerTurn = game.PlayerTwoId;
+            else
+                game.PlayerTurn = game.PlayerOneId;
+        }
+
+        _context.SaveChanges();
+
+        return Ok(Mapper.MapGame(game));
+    }
+
+    [HttpPost("{gameId}/giveup/{playerId}/")]
+    [ProducesResponseType(typeof(GameDTO), 200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public IActionResult GiveUp(int gameId, int playerId)
+    {
+        var game = _context.GamesPlayers
+            .Include(g => g.Game)
+            .Include(gp => gp.PlayerOne)
+            .Include(gp => gp.PlayerTwo)
+            .Where(g => g.Game.Id == gameId && (g.PlayerOneId == playerId || g.PlayerTwoId == playerId))
+            .FirstOrDefault();
+
+        if (game == null || game.Game == null)
+        {
+            return NotFound($"Game with ID {gameId} not found or player is not part of the game");
+        }
+
+        game.Game.IsActive = false;
+        game.Game.WinnerId = game.PlayerOneId == playerId ? game.PlayerTwoId : game.PlayerOneId; // Set the winner to the other player
+
+        _context.SaveChanges();
+
+        return Ok(Mapper.MapGame(game));
     }
 }
