@@ -159,8 +159,13 @@ public class GameController : ControllerBase
             .Include(g => g.Game)
             .Include(gp => gp.PlayerOne)
             .Include(gp => gp.PlayerTwo)
-            .Where(g => g.Game.Id == gameId && g.PlayerTwoId != null)
+            .Where(g => g.Game.Id == gameId)
             .FirstOrDefault();
+
+        if (game.PlayerTwo == null)
+        {
+            return BadRequest("Game is not full yet. Please wait till a second player joins.");
+        }
 
         if (game == null || game.Game == null)
         {
