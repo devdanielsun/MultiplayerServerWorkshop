@@ -159,12 +159,17 @@ public class GameController : ControllerBase
             .Include(g => g.Game)
             .Include(gp => gp.PlayerOne)
             .Include(gp => gp.PlayerTwo)
-            .Where(g => g.Game.Id == gameId && (g.PlayerOneId == move.playerId || g.PlayerTwoId == move.playerId))
+            .Where(g => g.Game.Id == gameId && g.PlayerTwoId != null)
             .FirstOrDefault();
 
         if (game == null || game.Game == null)
         {
-            return NotFound($"Game with ID {gameId} not found or player is not part of the game");
+            return NotFound($"Game with ID {gameId} not found.");
+        }
+
+        if (game.PlayerOne.Id != move.playerId && game.PlayerTwo != null && game.PlayerTwo?.Id != move.playerId)
+        {
+            return NotFound($"Player with ID {move.playerId} is not part of Game with ID {gameId}.");
         }
 
         if (game.Game.WinnerId != null)
