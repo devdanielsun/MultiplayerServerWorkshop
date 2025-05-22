@@ -57,19 +57,14 @@ public class StartMenuManager : MonoBehaviour
         Debug.Log($"Try registering new player with URL: {ipInputField.text} and Username: {usernameInputField.text}");
 
         // string jsonPayload = JsonUtility.ToJson(new PlayerDTO { id = 0, username = playerName });
-        
+
         using (UnityWebRequest request = new UnityWebRequest(url + $"/api/players/create?username={playerName}", "POST"))
         {
             request.downloadHandler = new DownloadHandlerBuffer();
 
             yield return request.SendWebRequest();
 
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError($"Error creating player: {request.error}");
-                apiOnline = false;
-            }
-            else
+            if (request.result == UnityWebRequest.Result.Success)
             {
                 apiOnline = true;
 
@@ -92,14 +87,20 @@ public class StartMenuManager : MonoBehaviour
 
                     Debug.Log("Create new player success, or 'loggedin' successfull.");
 
-                    
+
                     // Load the next scene or perform the next action
                     SceneManager.LoadScene("GameMenu");
-                                }
+                }
                 catch (System.Exception ex)
                 {
                     Debug.LogError($"Failed to parse response: {ex.Message}");
                 }
+            }
+            else
+            {
+                apiOnline = false;
+
+                LoggingHelper.LogApiError("Error creating player", request);
             }
         }
     }

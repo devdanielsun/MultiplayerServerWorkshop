@@ -1,15 +1,15 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using TMPro;
 
 public class GameMenuManager : MonoBehaviour
 {
     public TMP_Text viewIpTextField;
     public TMP_Text viewUsernameTextField;
-    public Button newGameButton;
-    public Button browseGamesButton;
-    public Button finishedGamesButton;
 
     // variables that hold the values of the user settings
     // use them as data for the API calls
@@ -19,9 +19,6 @@ public class GameMenuManager : MonoBehaviour
     private void Start()
     {
         LoadPlayerPrefs();
-        newGameButton.onClick.AddListener(OnNewGameButtonClicked);
-        browseGamesButton.onClick.AddListener(OnBrowseGamesButtonClicked);
-        finishedGamesButton.onClick.AddListener(OnFinishedGamesButtonClicked);
     }
 
     private void LoadPlayerPrefs()
@@ -33,35 +30,44 @@ public class GameMenuManager : MonoBehaviour
         viewUsernameTextField.text = $"Username: {username}";
     }
 
-    private void OnNewGameButtonClicked()
+    public void OnNewGameButtonClicked()
     {
+        StartCoroutine(CreateNewGame());
+    }
+
+    private IEnumerator CreateNewGame() {
         // Call API to create a new game here
+        // Fetch data from the API
+        var apiUrl = PlayerPrefs.GetString(Config.apiUrlKey, "");
+        var playerId = PlayerPrefs.GetString(Config.playerId, "");
 
-        // Check if the API call was successful
+        Debug.Log("Creating new game...");
 
-        // Load the appropriate scene or update UI
-        SceneManager.LoadScene("TicTacToeBoard");
-    }
+        using (UnityWebRequest request = new UnityWebRequest(apiUrl + $"/api/games/create?playerId={playerId}", "POST"))
+        {
+            request.downloadHandler = new DownloadHandlerBuffer();
 
-    private void OnBrowseGamesButtonClicked()
-    {
-        // Call API to retrieve active games here
+            yield return request.SendWebRequest();
 
-        // Check if the API call was successful
+            // Check if the API call was successful
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                var rawData = request.downloadHandler.text;
 
-        // Open overlay panel
+                Debug.Log(rawData);
 
-        // View active games in the overlay panel
+                // Parse the JSON response
+                var gameData = JsonUtility.FromJson<GameDTO>(rawData);
 
-    }
+                PlayerPrefs.SetString(Config.gameId, gameData.id.ToString());
 
-    private void OnFinishedGamesButtonClicked()
-    {
-        // Call API to retrieve finished games here
-
-        // Check if the API call was successful
-
-        // View finished games in the overlay panel
-
+                // Load the appropriate scene or update UI
+                SceneManager.LoadScene("TicTacToeBoard");
+            }
+            else
+            {
+                LoggingHelper.LogApiError("Failed to create a new game", request);
+            }
+        }
     }
 }

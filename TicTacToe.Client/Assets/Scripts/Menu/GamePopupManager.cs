@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Networking;
-using TMPro; // Import TextMeshPro namespace
+using TMPro;
 
 public class GamePopupManager : MonoBehaviour
 {
@@ -60,7 +61,7 @@ public class GamePopupManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError("Failed to fetch games: " + request.error);
+                LoggingHelper.LogApiError("Failed to fetch games", request);
             }
         }
     }
@@ -87,11 +88,11 @@ public class GamePopupManager : MonoBehaviour
                     string player1Result = game.winnerId == game.playerOneId ? "won" : "lost";
                     string player2Result = game.winnerId == game.playerTwoId ? "won" : "lost";
 
-                    titleText = $"FINISHED: {game.gameName} [{game.playerOneName} ({player1Result}) vs {game.playerTwoName} ({player2Result})] : {game.board}";
+                    titleText = $"Finshed: {game.gameName} - {game.playerOneName} ({player1Result}) vs {game.playerTwoName} ({player2Result}) : {game.board}";
                 }
                 else
                 {
-                    titleText = $"ACTIVE: {game.gameName} [{game.playerOneName} vs {game.playerTwoName}] : {game.board}";
+                    titleText = $"Active: {game.gameName} - {game.playerOneName} vs {game.playerTwoName} : {game.board}";
                 }
             }
             else
@@ -119,7 +120,7 @@ public class GamePopupManager : MonoBehaviour
                 {
                     // Missing player 2, show join button
                     joinButton.gameObject.SetActive(true);
-                    joinButton.onClick.AddListener(() => JoinGame(game.id.ToString()));
+                    joinButton.onClick.AddListener(() => StartCoroutine(JoinGame(game.id.ToString())));
                 }
                 else
                 {
@@ -133,7 +134,6 @@ public class GamePopupManager : MonoBehaviour
     private IEnumerator JoinGame(string gameId)
     {
         Debug.Log("Joining game with ID: " + gameId);
-        // Add logic to join the game
 
         var apiUrl = PlayerPrefs.GetString(Config.apiUrlKey, "");
         var playerId = PlayerPrefs.GetString(Config.playerId, "");
@@ -145,11 +145,16 @@ public class GamePopupManager : MonoBehaviour
             if (request.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log("Successfully joined game with ID: " + gameId);
-                // Add logic to update the UI or navigate to the game screen
+
+                // Save GameId into PlayerPrefs
+                PlayerPrefs.SetString(Config.gameId, gameId);
+
+                // Ok, now open TicTacToeScene
+                SceneManager.LoadScene("TicTacToeBoard");
             }
             else
             {
-                Debug.LogError("Failed to join game: " + request.error);
+                LoggingHelper.LogApiError("Failed to join game", request);
             }
         }
     }

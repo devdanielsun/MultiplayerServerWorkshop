@@ -1,12 +1,37 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine.Networking;
+using TMPro;
 
 public class GameController : MonoBehaviour
 {
     [SerializeField] private GameObject[] tiles; // Array to hold the 9 tile GameObjects of TicTacToe grid
 
-    private bool isGameFinished = false; // Flag to check if the game is active
-    private bool isPlayerTurn = true; // Flag to check if it's the player's turn
-    private string winner = null; // Variable to hold the winner's name
+    public Sprite sprite_X;
+    public Sprite sprite_O;
+
+    public TMP_Text gameNameText;
+    public TMP_Text playerOneText;
+    public TMP_Text playerTwoText;
+    public TMP_Text whoHasTurnText;
+    public TMP_Text boardText;
+    public TMP_Text isGameActiveText;
+    public TMP_Text winnerText;
+
+    private bool initialiseText = true;
+    private GameDTO gameData = null;
+
+    // Time variables
+    private int interval = 3; // 3 seconds
+    private float nextTime = 0;
+
+    // Values of PlayerPrefs
+    private string apiUrl = null;
+    private string playerId = null;
+    private string gameId = null;
 
     void Start()
     {
@@ -26,21 +51,102 @@ public class GameController : MonoBehaviour
             tiles[i].AddComponent<BoxCollider2D>(); // Ensure each tile has a collider
             tiles[i].AddComponent<TileClickHandler>().Initialize(index, OnTileClicked);
         }
+
+        apiUrl = PlayerPrefs.GetString(Config.apiUrlKey, "");
+        playerId = PlayerPrefs.GetString(Config.playerId, "");
+        gameId = PlayerPrefs.GetString(Config.gameId, "");
+
+    // Get initial game data from API
+    StartCoroutine(GetGameData());
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (isGameFinished)
+        // Exit update() if the gameDate is null or if game is not active
+        if (gameData == null || !gameData.isActive)
         {
-            return; // Exit if the game is not active, nothing to update
+            return;
         }
 
-        // Check every second for the new game state through API call
-        // This is a placeholder for the actual API call
-        if (Time.frameCount % 60 == 0) // Check every second
+        // Check every x seconds for the new game state through API call
+        if (Time.time >= nextTime)
         {
-            CheckGameStateFromAPI();
+            // Update time in seconds
+            nextTime += interval;
+
+            // Execute API call every x seconds
+            StartCoroutine(GetGameData());
+        }
+    }
+
+
+    private IEnumerator GetGameData()
+    {
+        Debug.Log("Get game data...");
+
+        using (UnityWebRequest request = new UnityWebRequest(apiUrl + $"/api/games/{gameId}", "GET"))
+        {
+            request.downloadHandler = new DownloadHandlerBuffer();
+
+            yield return request.SendWebRequest();
+
+            // Check if the API call was successful
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                var rawData = request.downloadHandler.text;
+
+                Debug.Log(rawData);
+
+                // Parse the JSON response
+                gameData = JsonUtility.FromJson<GameDTO>(rawData);
+
+                // Initialise text one
+                if (initialiseText)
+                {
+
+                    // Set information into text
+                    gameNameText.text = $"Game name: {gameData.gameName}";
+                    playerOneText.text = $"Player 1 name: {gameData.playerOneName}";
+                    playerTwoText.text = $"Player 2 name: {gameData.playerTwoName}";
+
+                    initialiseText = false;
+                }
+
+                // After every API request, update dynamic text
+                UpdateDynamicTexts();
+
+                // Update board
+                // gameData.board...
+            }
+            else
+            {
+                LoggingHelper.LogApiError("Failed to get game info", request);
+            }
+        }
+    }
+
+    private void UpdateDynamicTexts()
+    {
+        playerTwoText.text = $"Player 2 name: {gameData.playerTwoName}";
+
+        isGameActiveText.text = gameData.isActive ? "Game is active" : "Game has finished";
+
+        boardText.text = $"Board: {gameData.board}";
+
+        // Calculate name of player who has turn
+        string whoHasTurn = gameData.playerTurn == gameData.playerOneId ? gameData.playerOneName : gameData.playerTurn == gameData.playerTwoId ? gameData.playerTwoName : "something went wrong";
+        whoHasTurnText.text = $"Turn: {whoHasTurn}";
+
+        if (gameData.winnerId != -1)
+        {
+            // Calculate name of player who has won
+            string winner = gameData.winnerId == gameData.playerOneId ? gameData.playerOneName : gameData.winnerId == gameData.playerTwoId ? gameData.playerTwoName : "something went wrong";
+            winnerText.text = $"Winner: {winner}";
+        }
+        else
+        {
+            winnerText.text = "";
         }
     }
 
@@ -49,22 +155,44 @@ public class GameController : MonoBehaviour
     {
         Debug.Log($"Tile with index '{tileIndex}' clicked!");
 
-        // Make API call to update the game state
+        // Make API call to update the game
+        // Also keep in mind that you handle the validtion, a move could be illegal
 
     }
 
-    private void CheckGameStateFromAPI()
+    public void ExitGame()
     {
-        // Placeholder for API call to check game state
-        Debug.Log("Checking game state from API...");
-        // Update the game state based on the response
+        StartCoroutine(ExitGameByAPICall());
+    }
 
-        // var result = ...
-        // if (result.isGameFinished == true)
-        // {
-        //     isGameFinished = true;
-        //     Debug.Log("Game Over!");
-        //     winner = result.Winner;
-        // }
+    private IEnumerator ExitGameByAPICall()
+    {
+        if (gameData.isActive)
+        {
+            using (UnityWebRequest request = new UnityWebRequest(apiUrl + $"/api/games/{gameId}/giveup/{playerId}", "POST"))
+            {
+                request.downloadHandler = new DownloadHandlerBuffer();
+
+                yield return request.SendWebRequest();
+
+                // Check if the API call was successful
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    // Reset PlayerPrefs of GameId, and load GameMenu scene
+                    PlayerPrefs.DeleteKey(Config.gameId);
+                    SceneManager.LoadScene("GameMenu");
+                }
+                else
+                {
+                    LoggingHelper.LogApiError("Something went wrong when closing the game", request);
+                }
+            }
+        }
+        else
+        {
+            // Game already finished, so no API call needed to 'give up'
+            PlayerPrefs.DeleteKey(Config.gameId);
+            SceneManager.LoadScene("GameMenu");
+        }
     }
 }
