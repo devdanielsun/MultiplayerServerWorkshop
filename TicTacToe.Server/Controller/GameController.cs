@@ -162,14 +162,14 @@ public class GameController : ControllerBase
             .Where(g => g.Game.Id == gameId)
             .FirstOrDefault();
 
-        if (game.PlayerTwo == null)
-        {
-            return BadRequest("Game is not full yet. Please wait till a second player joins.");
-        }
-
         if (game == null || game.Game == null)
         {
             return NotFound($"Game with ID {gameId} not found.");
+        }
+
+        if (game.PlayerTwo == null)
+        {
+            return BadRequest("Game is not full yet. Please wait till a second player joins.");
         }
 
         if (game.PlayerOne.Id != move.playerId && game.PlayerTwo != null && game.PlayerTwo?.Id != move.playerId)
