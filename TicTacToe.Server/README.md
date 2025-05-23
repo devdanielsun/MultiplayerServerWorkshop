@@ -15,12 +15,28 @@ dotnet build
 dotnet run
 ```
 
-Use `https://127.0.0.1:5001/swagger` or some application like Postman to test the api
-
 ## Start project in Visual Studio 2022
 1. Open [/TicTacToe.Server/](TicTacToe.Server) into Visual Studio 2022
 2. Press play to start the Api
-3. Use `https://127.0.0.1:5001/swagger` or some application like Postman to test the api
+3. Use `http://127.0.0.1:5000/swagger` or `https://127.0.0.1:5001/swagger` or some application like Postman to test the api
+
+## HTTPS is giving a warning/error
+
+If this is the case, you need to renew you certificate and trust it. You can do that by entering the following command into your CLI/terminal:
+
+### Linux/Mac:
+
+```
+sudo dotnet dev-certs https --clean
+sudo dotnet dev-certs https --trust
+```
+
+### Windows:
+
+```
+dotnet dev-certs https --clean
+dotnet dev-certs https --trust
+```
 
 ## How to connect from another device?
 
