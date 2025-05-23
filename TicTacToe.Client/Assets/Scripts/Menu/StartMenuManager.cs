@@ -54,9 +54,12 @@ public class StartMenuManager : MonoBehaviour
 
     private IEnumerator RegisterNewPlayer(string url, string playerName)
     {
-        Debug.Log($"Try registering new player with URL: {ipInputField.text} and Username: {usernameInputField.text}");
+        if (url.EndsWith("/"))
+        {
+            url = url.TrimEnd('/');
+        }   
 
-        // string jsonPayload = JsonUtility.ToJson(new PlayerDTO { id = 0, username = playerName });
+        Debug.Log($"Try registering new player with URL: {url} and Username: {playerName}");
 
         using (UnityWebRequest request = new UnityWebRequest(url + $"/api/players/create?username={playerName}", "POST"))
         {

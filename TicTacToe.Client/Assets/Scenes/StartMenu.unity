@@ -2499,7 +2499,7 @@ MonoBehaviour:
   m_text: 'Enter down below the API URL and your username.
 
     The api url should
-    look like: http://12.0.0.10:5000/
+    look like: http://12.0.0.10:5000
 
     The username should be unique, and minimal
     3 and max 20 characters long.'
