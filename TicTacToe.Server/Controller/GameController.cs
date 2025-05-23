@@ -182,14 +182,14 @@ public class GameController : ControllerBase
             return BadRequest("Game already has a winner.");
         }
 
-        if (move.index < 0 || move.index >= 9)
+        if (move.tileIndex < 0 || move.tileIndex >= 9)
         {
             return BadRequest("Invalid move index.");
         }
 
-        if (game.Game.Board[move.index] != '_')
+        if (game.Game.Board[move.tileIndex] != '_')
         {
-            return BadRequest("Invalid move. Tile already occupied.");
+            return BadRequest($"Invalid move. Tile at index {move.tileIndex} already occupied with {game.Game.Board[move.tileIndex]}.");
         }
 
         if (game.PlayerTurn != move.playerId)
@@ -199,7 +199,7 @@ public class GameController : ControllerBase
 
         // Mark the move: '1' for PlayerOne, '2' for PlayerTwo
         char mark = (game.PlayerOneId == move.playerId) ? '1' : '2';
-        game.Game.Board = game.Game.Board.Remove(move.index, 1).Insert(move.index, mark.ToString());
+        game.Game.Board = game.Game.Board.Remove(move.tileIndex, 1).Insert(move.tileIndex, mark.ToString());
 
         // Check for winner
         int? winnerId = TicTacToeLogic.CheckWinner(game.Game.Board, game.PlayerOneId, game.PlayerTwoId);
