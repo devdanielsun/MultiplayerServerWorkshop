@@ -25,9 +25,10 @@ public class GameMenuManager : MonoBehaviour
     {
         apiUrl = PlayerPrefs.GetString(Config.apiUrlKey, "");
         username = PlayerPrefs.GetString(Config.usernameKey, "");
+        var playerId = PlayerPrefs.GetString(Config.playerId, "");
 
         viewIpTextField.text = $"Api URL: {apiUrl}";
-        viewUsernameTextField.text = $"Username: {username}";
+        viewUsernameTextField.text = $"Username: {username} ({playerId})";
     }
 
     public void OnNewGameButtonClicked()

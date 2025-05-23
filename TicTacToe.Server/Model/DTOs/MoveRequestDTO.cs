@@ -3,5 +3,5 @@
 public class MoveRequestDTO
 {
     public int playerId { get; set; }
-    public int index { get; set; }
+    public int tileIndex { get; set; }
 }

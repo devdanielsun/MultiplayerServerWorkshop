@@ -10,6 +10,7 @@ public class GameController : MonoBehaviour
 {
     [SerializeField] private GameObject[] tiles; // Array to hold the 9 tile GameObjects of TicTacToe grid
 
+    public Sprite sprite_empty;
     public Sprite sprite_X;
     public Sprite sprite_O;
 
@@ -47,14 +48,28 @@ public class GameController : MonoBehaviour
         // Assign click handlers to each tile
         for (int i = 0; i < tiles.Length; i++)
         {
-            int index = i; // Capture the current index for the lambda
-            tiles[i].AddComponent<BoxCollider2D>(); // Ensure each tile has a collider
-            tiles[i].AddComponent<TileClickHandler>().Initialize(index, OnTileClicked);
+            int tileIndex = i; // Capture the current value of i
+            // Ensure each tile has a collider
+            if (tiles[tileIndex].GetComponent<BoxCollider2D>() == null)
+            {
+                tiles[tileIndex].AddComponent<BoxCollider2D>();
+            }
+            // Ensure each tile has a button
+            if (tiles[tileIndex].GetComponent<Button>() == null)
+            {
+                tiles[tileIndex].AddComponent<Button>();
+            }
+            // Add click listener to each tile
+            tiles[tileIndex].GetComponent<Button>().onClick.AddListener(() => OnTileClicked(tileIndex));
         }
 
         apiUrl = PlayerPrefs.GetString(Config.apiUrlKey, "");
         playerId = PlayerPrefs.GetString(Config.playerId, "");
         gameId = PlayerPrefs.GetString(Config.gameId, "");
+
+        Debug.Log($"API URL: {apiUrl}");
+        Debug.Log($"Player ID: {playerId}");
+        Debug.Log($"Game ID: {gameId}");
 
     // Get initial game data from API
     StartCoroutine(GetGameData());
@@ -116,8 +131,37 @@ public class GameController : MonoBehaviour
                 // After every API request, update dynamic text
                 UpdateDynamicTexts();
 
-                // Update board
-                // gameData.board...
+                // Update the board based on the gameData
+                for (int i = 0; i < tiles.Length; i++)
+                {
+                    // Check the value of each tile in the board
+                    char tileValue = gameData.board[i];
+
+                    // Update the tile sprite based on the value
+                    if (tileValue == '1')
+                    {
+                        tiles[i].GetComponent<SpriteRenderer>().sprite = sprite_X;
+
+                        if (gameData.playerOneId.ToString() == playerId)
+                            tiles[i].GetComponent<SpriteRenderer>().color = Color.blue; // Set color to blue for player 1
+                        else
+                            tiles[i].GetComponent<SpriteRenderer>().color = Color.red; // Set color to red for player 2
+                    }
+                    else if (tileValue == '2')
+                    {
+                        tiles[i].GetComponent<SpriteRenderer>().sprite = sprite_O;
+
+                        if (gameData.playerTwoId.ToString() == playerId)
+                            tiles[i].GetComponent<SpriteRenderer>().color = Color.blue; // Set color to blue for player 2
+                        else
+                            tiles[i].GetComponent<SpriteRenderer>().color = Color.red; // Set color to red for player 1
+                    }
+                    else
+                    {
+                        tiles[i].GetComponent<SpriteRenderer>().sprite = sprite_empty; // Reset to default if empty
+                        tiles[i].GetComponent<SpriteRenderer>().color = Color.white; // Set color to red for player 1
+                    }
+                }
             }
             else
             {
@@ -155,9 +199,22 @@ public class GameController : MonoBehaviour
     {
         Debug.Log($"Tile with index '{tileIndex}' clicked!");
 
-        // Make API call to update the game
-        // Also keep in mind that you handle the validtion, a move could be illegal
+        StartCoroutine(MakeMove(tileIndex));
+    }
+    
+    private IEnumerator MakeMove(int tileIndex)
+    {
+        /* Make API call to update the game
+        * Also keep in mind that you handle the validtion, a move could be illegal
+        */
+        
+        // Create the JSON object for the move
 
+
+        // Convert the object to JSON string
+
+
+        // Create UnityWebRequest for POST with JSON body
     }
 
     public void ExitGame()
