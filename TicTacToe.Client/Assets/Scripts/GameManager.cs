@@ -71,8 +71,8 @@ public class GameController : MonoBehaviour
         Debug.Log($"Player ID: {playerId}");
         Debug.Log($"Game ID: {gameId}");
 
-    // Get initial game data from API
-    StartCoroutine(GetGameData());
+        // Get initial game data from API
+        StartCoroutine(GetGameData());
     }
 
     // Update is called once per frame
@@ -210,11 +210,44 @@ public class GameController : MonoBehaviour
         
         // Create the JSON object for the move
 
+        MoveDTO moveData = new MoveDTO()
+        {
+            playerId = playerId,
+            tileIndex = tileIndex.ToString()
+        };
 
         // Convert the object to JSON string
 
+        string json = JsonUtility.ToJson(moveData);
+
+        Debug.Log($"Making move: {json}");
 
         // Create UnityWebRequest for POST with JSON body
+        using (UnityWebRequest request = new UnityWebRequest(apiUrl + $"/api/games/{gameId}/move", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            // Send the request and wait for a response
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Move made successfully!");
+
+                // Disable the tile to prevent further clicks
+                tiles[tileIndex].GetComponent<BoxCollider2D>().enabled = false; // Disable the collider
+                tiles[tileIndex].GetComponent<TileClickHandler>().enabled = false; // Disable the click handler
+
+                StartCoroutine(GetGameData());
+            }
+            else
+            {
+                LoggingHelper.LogApiError("Failed to make move", request);
+            }
+        }
     }
 
     public void ExitGame()
